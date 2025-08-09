@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    environment{
+        PATH = "/opt/maven/bin:$PATH"
+        SONAR_HOST_URL = "http://13.233.143.177:9000"
+        SONAR_AUTH_TOKEN = credentials('sonarqube-token')
+    }
+    stages {
+        stage("clone") {
+            steps {
+                git 'https://github.com/nsatwik/SampleWebApp.git'
+            }
+        }
+        stage("build") {
+            steps {
+                sh "mvn clean install"
+            }
+        }
+        stage("scp") {
+            steps {
+                sh "scp /var/lib/jenkins/workspace/pipeline-maven/target/WebApp.war root@3.110.183.18:/opt/tomcat/webapps"
+            }
+        }
+        stage("scan") {
+            steps {
+                script {
+                    withSonarQubeEnv('sonarqube9.9.3') {
+                        sh "mvn clean install sonar:sonar -Dsonar.projectKey=Jenkins-maven -Dsonar.host.url=http://13.233.143.177:9000 -Dsonar.login=sqp_8ed34a8b581797038de1eda21477502c37550517"
+                    }
+                }
+            }
+        }
+        stage("artifact-upload") {
+            steps {
+                nexusArtifactUploader artifacts: [[artifactId: 'WebApp', classifier: '', file: 'target/WebApp.war', type: '.war']], credentialsId: 'nexus-credentials', groupId: 'lu.amazon.aws.demo', nexusUrl: '13.233.143.177:8081', nexusVersion: 'nexus3', protocol: 'http', repository: 'mynexusrepo', version: '2.0'
+            }
+        }
+        
+    }
+}
