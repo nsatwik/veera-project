@@ -5,8 +5,8 @@ from datetime import datetime
 
 ebs_client = boto3.client('elasticbeanstalk')
 
-APP_NAME = "Test-Task"
-ENV_NAME = "Test-Task-env"
+APP_NAME = "Test-Task"   ##Your own EBS APP Name
+ENV_NAME = "Test-Task-env"  ##Your Own EBS Env Name
 
 def wait_for_environment_ready(env_name, max_retries=30):
     """Wait until Elastic Beanstalk environment is Ready."""
